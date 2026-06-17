@@ -19,6 +19,17 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Cache Gradle and Loom
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Build
         run: ./gradlew build
 
