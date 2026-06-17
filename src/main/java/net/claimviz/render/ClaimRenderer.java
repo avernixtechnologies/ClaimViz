@@ -23,9 +23,12 @@ import java.util.List;
 
 public class ClaimRenderer {
 
-    private static final int COLOR_OWN    = 0xBB44FF; // purple  — own claims
-    private static final int COLOR_ADMIN  = 0x00CCBB; // teal   — admin claims
-    private static final int COLOR_INSIDE = 0xFFFF00; // yellow — inside someone else's claim
+    private static final int COLOR_OWN    = 0xBB44FF;
+    private static final int COLOR_ADMIN  = 0x00CCBB;
+    private static final int COLOR_INSIDE = 0xFFFF00;
+
+    private static long lastRenderError = 0;
+    private static long lastRenderStats = 0;
 
     private static final int LABEL_COLOR_OWN   = 0xFFDD99FF; // lighter purple, full alpha
     private static final int LABEL_COLOR_ADMIN  = 0xFF44FFEE; // lighter teal, full alpha
@@ -39,6 +42,23 @@ public class ClaimRenderer {
     }
 
     private static void render(WorldRenderContext context) {
+        long start = System.nanoTime();
+        try {
+            renderInternal(context);
+        } catch (Exception e) {
+            long now = System.currentTimeMillis();
+            if (now - lastRenderError > 5000) {
+                lastRenderError = now;
+                ClaimViz.LOGGER.error("[ClaimViz] Claim render crashed (suppressing repeats for 5s)", e);
+            }
+        }
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > 50) {
+            ClaimViz.LOGGER.warn("[ClaimViz] Claim render took {}ms — possible freeze source", ms);
+        }
+    }
+
+    private static void renderInternal(WorldRenderContext context) {
         if (!ClaimViz.showClaims) return;
         var cfg = ServerJoinHandler.getActiveConfig();
         if (cfg == null || !cfg.showClaims) return;
@@ -58,6 +78,12 @@ public class ClaimRenderer {
             .filter(c -> c.isNear(px, pz, renderDist))
             .toList();
         if (nearby.isEmpty()) return;
+
+        long now = System.currentTimeMillis();
+        if (now - lastRenderStats > 15000) {
+            lastRenderStats = now;
+            ClaimViz.LOGGER.info("[ClaimViz] Rendering {} claims in {}", nearby.size(), dim);
+        }
 
         String playerName = client.player.getGameProfile().name();
         Vec3d cam = client.gameRenderer.getCamera().getCameraPos();

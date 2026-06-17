@@ -34,6 +34,10 @@ public class PlayerRenderer {
     private static Matrix4f storedMVP;
     private static Vec3d storedCamPos;
 
+    private static long lastWorldRenderError = 0;
+    private static long lastHudRenderError = 0;
+    private static long lastRenderStats = 0;
+
     public static void register() {
         WorldRenderEvents.END_MAIN.register(PlayerRenderer::renderWorld);
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> renderHud(drawContext));
@@ -42,6 +46,23 @@ public class PlayerRenderer {
     // ── World-space: health cross + yaw tick + name tag ──────────────────────
 
     private static void renderWorld(WorldRenderContext context) {
+        long start = System.nanoTime();
+        try {
+            renderWorldInternal(context);
+        } catch (Exception e) {
+            long now = System.currentTimeMillis();
+            if (now - lastWorldRenderError > 5000) {
+                lastWorldRenderError = now;
+                ClaimViz.LOGGER.error("[ClaimViz] Player world render crashed (suppressing repeats for 5s)", e);
+            }
+        }
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > 50) {
+            ClaimViz.LOGGER.warn("[ClaimViz] Player world render took {}ms — possible freeze source", ms);
+        }
+    }
+
+    private static void renderWorldInternal(WorldRenderContext context) {
         if (!ClaimViz.showPlayers) return;
         var cfg = ServerJoinHandler.getActiveConfig();
         if (cfg == null || !cfg.showPlayers) return;
@@ -78,6 +99,14 @@ public class PlayerRenderer {
             .filter(p -> !selfUuid.equals(p.uuid()))
             .filter(p -> distSq(p.x(), p.z(), selfX, selfZ) <= renderDistSq)
             .toList();
+
+        long now = System.currentTimeMillis();
+        if (now - lastRenderStats > 15000) {
+            lastRenderStats = now;
+            ClaimViz.LOGGER.info("[ClaimViz] Rendering {} players in {}, renderDist={}",
+                players.size(), localDim, renderDist);
+        }
+
         if (players.isEmpty()) return;
 
         MatrixStack matrices = context.matrices();
@@ -142,6 +171,23 @@ public class PlayerRenderer {
     // ── HUD overlay: skin face icon ──────────────────────────────────────────
 
     private static void renderHud(DrawContext drawContext) {
+        long start = System.nanoTime();
+        try {
+            renderHudInternal(drawContext);
+        } catch (Exception e) {
+            long now = System.currentTimeMillis();
+            if (now - lastHudRenderError > 5000) {
+                lastHudRenderError = now;
+                ClaimViz.LOGGER.error("[ClaimViz] Player HUD render crashed (suppressing repeats for 5s)", e);
+            }
+        }
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > 50) {
+            ClaimViz.LOGGER.warn("[ClaimViz] Player HUD render took {}ms — possible freeze source", ms);
+        }
+    }
+
+    private static void renderHudInternal(DrawContext drawContext) {
         if (!ClaimViz.showPlayers) return;
         var cfg = ServerJoinHandler.getActiveConfig();
         if (cfg == null || !cfg.showPlayers) return;

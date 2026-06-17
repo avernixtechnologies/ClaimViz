@@ -38,6 +38,8 @@ public class PlayerFetcher {
         executor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "claimviz-player-fetcher");
             t.setDaemon(true);
+            t.setUncaughtExceptionHandler((thread, ex) ->
+                ClaimViz.LOGGER.error("[ClaimViz] {} died unexpectedly", thread.getName(), ex));
             return t;
         });
         executor.scheduleAtFixedRate(PlayerFetcher::fetchNow, 0, 1, TimeUnit.SECONDS);
@@ -76,7 +78,7 @@ public class PlayerFetcher {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            ClaimViz.LOGGER.warn("Player fetch failed: {}", e.getMessage());
+            ClaimViz.LOGGER.warn("[ClaimViz] Player fetch failed", e);
         }
     }
 

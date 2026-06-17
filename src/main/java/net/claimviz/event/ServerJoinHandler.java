@@ -53,9 +53,21 @@ public class ServerJoinHandler {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            handleKeybinds(client);
-            handleDimensionChange(client);
-            handleClaimMessages(client);
+            try {
+                handleKeybinds(client);
+            } catch (Exception e) {
+                ClaimViz.LOGGER.error("[ClaimViz] Keybind tick handler crashed", e);
+            }
+            try {
+                handleDimensionChange(client);
+            } catch (Exception e) {
+                ClaimViz.LOGGER.error("[ClaimViz] Dimension change handler crashed", e);
+            }
+            try {
+                handleClaimMessages(client);
+            } catch (Exception e) {
+                ClaimViz.LOGGER.error("[ClaimViz] Claim message handler crashed", e);
+            }
         });
     }
 
@@ -152,6 +164,8 @@ public class ServerJoinHandler {
         claimRefreshExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "claimviz-claim-refresh");
             t.setDaemon(true);
+            t.setUncaughtExceptionHandler((thread, ex) ->
+                ClaimViz.LOGGER.error("[ClaimViz] {} died unexpectedly", thread.getName(), ex));
             return t;
         });
         // The initial fetch is triggered by the dimension-change tick handler on the first tick.
