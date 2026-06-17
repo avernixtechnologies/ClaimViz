@@ -26,7 +26,6 @@ dependencies {
     // Soft dependencies — compile against but do not bundle or require at runtime
     modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
     modCompileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
-    modCompileOnly files("/home/trarn/.var/app/com.modrinth.ModrinthApp/data/ModrinthApp/profiles/Fabric 1.21.11/mods/xaerominimap-fabric-1.21.11-26.1.0.jar")
 }
 
 processResources {
