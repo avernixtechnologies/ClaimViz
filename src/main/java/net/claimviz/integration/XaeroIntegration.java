@@ -109,44 +109,42 @@ public class XaeroIntegration {
 		if (!XAERO_PRESENT)
 			return;
 		ClaimViz.LOGGER.info("ClaimViz: syncClaimWaypoints called with {} claims", claims.size());
-		try {
-			Object session = getOrInitSession();
-			ClaimViz.LOGGER.info("ClaimViz: Xaero session = {}", session);
+		// Dispatch to main thread — Xaero's WaypointSet is not thread-safe; the render
+		// thread iterates it to draw the minimap concurrently with our background fetch.
+		MinecraftClient.getInstance().execute(() -> {
+			try {
+				Object waypointSet = getCurrentWaypointSet();
+				if (waypointSet == null) {
+					ClaimViz.LOGGER.warn("ClaimViz: Xaero waypointSet is null — world not ready yet?");
+					return;
+				}
+				ensureWaypointReflection(waypointSet);
 
-			Object waypointSet = getCurrentWaypointSet();
-			ClaimViz.LOGGER.info("ClaimViz: Xaero waypointSet = {}", waypointSet);
-			if (waypointSet == null) {
-				ClaimViz.LOGGER.warn("ClaimViz: Xaero waypointSet is null — world not ready yet?");
-				return;
+				for (Object wp : trackedWaypoints) {
+					waypointSetRemoveMethod.invoke(waypointSet, wp);
+				}
+				trackedWaypoints.clear();
+
+				String selfName = selfName();
+
+				for (ClaimRect claim : claims) {
+					int cx = (int) Math.floor((claim.minX() + claim.maxX()) / 2.0);
+					int cz = (int) Math.floor((claim.minZ() + claim.maxZ()) / 2.0);
+					String name = waypointName(claim);
+					String inits = waypointInitials(claim);
+					int color = waypointColor(claim, selfName);
+					Object wp = waypointConstructor.newInstance(cx, 64, cz, name, inits, color);
+					waypointSetAddMethod.invoke(waypointSet, wp);
+					trackedWaypoints.add(wp);
+				}
+
+				ClaimViz.LOGGER.info("ClaimViz: synced {} claim waypoints to Xaero", trackedWaypoints.size());
+			} catch (Exception e) {
+				ClaimViz.LOGGER.warn("ClaimViz: Xaero waypoint sync failed: {} — {}", e.getClass().getSimpleName(),
+						e.getMessage());
+				e.printStackTrace();
 			}
-			ensureWaypointReflection(waypointSet);
-
-			// Remove previously added claim waypoints
-			for (Object wp : trackedWaypoints) {
-				waypointSetRemoveMethod.invoke(waypointSet, wp);
-			}
-			trackedWaypoints.clear();
-
-			String selfName = selfName();
-
-			for (ClaimRect claim : claims) {
-				int cx = (int) Math.floor((claim.minX() + claim.maxX()) / 2.0);
-				int cz = (int) Math.floor((claim.minZ() + claim.maxZ()) / 2.0);
-				String name = waypointName(claim);
-				String inits = waypointInitials(claim);
-				int color = waypointColor(claim, selfName);
-				Object wp = waypointConstructor.newInstance(cx, 64, cz, name, inits, color);
-				ClaimViz.LOGGER.debug("ClaimViz: adding waypoint '{}' at ({}, 64, {})", name, cx, cz);
-				waypointSetAddMethod.invoke(waypointSet, wp);
-				trackedWaypoints.add(wp);
-			}
-
-			ClaimViz.LOGGER.info("ClaimViz: synced {} claim waypoints to Xaero", trackedWaypoints.size());
-		} catch (Exception e) {
-			ClaimViz.LOGGER.warn("ClaimViz: Xaero waypoint sync failed: {} — {}", e.getClass().getSimpleName(),
-					e.getMessage());
-			e.printStackTrace();
-		}
+		});
 	}
 
 	/**

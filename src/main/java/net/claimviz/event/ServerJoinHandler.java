@@ -8,6 +8,7 @@ import net.claimviz.data.ClaimRect;
 import net.claimviz.data.PlayerFetcher;
 import net.claimviz.data.SquaremapFetcher;
 import net.claimviz.integration.XaeroIntegration;
+import net.claimviz.map.MapScreen;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
@@ -50,6 +51,9 @@ public class ServerJoinHandler {
             stopAll();
             XaeroIntegration.clearWaypoints();
             XaeroIntegration.clearTrackedPlayers();
+            client.execute(() -> {
+                if (client.currentScreen instanceof MapScreen ms) ms.close();
+            });
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -88,6 +92,13 @@ public class ServerJoinHandler {
                     Text.literal("[ClaimViz] Players " + (ClaimViz.showPlayers ? "enabled" : "disabled")),
                     true
                 );
+            }
+        }
+        while (ClaimViz.OPEN_MAP != null && ClaimViz.OPEN_MAP.wasPressed()) {
+            if (activeConfig != null && lastDimension != null) {
+                client.setScreen(new MapScreen(activeConfig, lastDimension));
+            } else if (client.player != null) {
+                client.player.sendMessage(Text.literal("[ClaimViz] No config for this server."), true);
             }
         }
     }

@@ -8,6 +8,9 @@ public class ClaimVizConfig {
     /** How far (in blocks) from the player to render claim borders. Configurable via ModMenu. */
     public int claimRenderDistance = 200;
 
+    /** Max SquareMap tiles held in GPU memory. Lower if experiencing memory pressure. */
+    public int mapTileBudget = 128;
+
     public List<ServerConfig> servers = new ArrayList<>();
 
     public static class ServerConfig {
@@ -31,5 +34,7 @@ public class ClaimVizConfig {
         public boolean persistentClaimBar = false;
         /** Add claims as waypoints in Xaero's Minimap (if installed). */
         public boolean xaeroWaypointsEnabled = false;
+        /** How often (in seconds) to re-fetch map tiles. 0 disables refresh. */
+        public int mapTileRefreshSeconds = 60;
     }
 }

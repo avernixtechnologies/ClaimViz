@@ -49,6 +49,13 @@ public class ClaimVizConfigScreen {
             .setSaveConsumer(val -> config.claimRenderDistance = val)
             .build()
         );
+        general.addEntry(entry
+            .startIntSlider(Text.literal("Map Tile Budget"), config.mapTileBudget, 16, 512)
+            .setDefaultValue(128)
+            .setTooltip(Text.literal("Max SquareMap tiles held in GPU memory. Lower this if the game runs out of memory with the map open."))
+            .setSaveConsumer(val -> config.mapTileBudget = val)
+            .build()
+        );
 
         // ── Servers ───────────────────────────────────────────────────────────
         ConfigCategory serversCategory = builder.getOrCreateCategory(Text.literal("Servers"));
@@ -159,6 +166,13 @@ public class ClaimVizConfigScreen {
             .startBooleanToggle(Text.literal("Xaero Waypoints"), slot.xaeroWaypointsEnabled)
             .setTooltip(Text.literal("Add claim markers as waypoints in Xaero's Minimap / World Map (requires Xaero's installed)."))
             .setSaveConsumer(val -> slot.xaeroWaypointsEnabled = val)
+            .build()
+        );
+        sub.add(entry
+            .startIntSlider(Text.literal("Map Tile Refresh (seconds)"), slot.mapTileRefreshSeconds, 0, 300)
+            .setDefaultValue(60)
+            .setTooltip(Text.literal("How often the in-game map re-fetches tiles from SquareMap. Set to 0 to disable auto-refresh."))
+            .setSaveConsumer(val -> slot.mapTileRefreshSeconds = val)
             .build()
         );
     }

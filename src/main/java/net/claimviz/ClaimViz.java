@@ -19,6 +19,7 @@ public class ClaimViz implements ClientModInitializer {
 
     public static KeyBinding TOGGLE_CLAIMS;
     public static KeyBinding TOGGLE_PLAYERS;
+    public static KeyBinding OPEN_MAP;
 
     public static volatile boolean showClaims = true;
     public static volatile boolean showPlayers = true;
@@ -39,6 +40,12 @@ public class ClaimViz implements ClientModInitializer {
             "key.claimviz.toggle_players",
             InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_P,
+            category
+        ));
+        OPEN_MAP = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.claimviz.open_map",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_M,
             category
         ));
 
