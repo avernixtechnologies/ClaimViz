@@ -22,7 +22,7 @@ public class ClaimVizConfig {
         public boolean showClaimOwnerLabels = true;
         /** Distance in blocks between repeated owner labels along a claim edge. */
         public int claimLabelSpacing = 12;
-        public boolean showPlayers = true;
+        public boolean showPlayers = false;
         /** Max distance in blocks at which other players are rendered. */
         public int playerRenderDistance = 500;
         /** Show action bar messages when entering/leaving a claim. */
@@ -30,6 +30,6 @@ public class ClaimVizConfig {
         /** Continuously show which claim you are standing in on the action bar. */
         public boolean persistentClaimBar = false;
         /** Add claims as waypoints in Xaero's Minimap (if installed). */
-        public boolean xaeroWaypointsEnabled = true;
+        public boolean xaeroWaypointsEnabled = false;
     }
 }
