@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew build -Pmod_version=${GITHUB_REF_NAME#v}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
